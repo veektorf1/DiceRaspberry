@@ -145,6 +145,16 @@ def przelicz():
                 sum_5x = 50
         if len(ilosc)>1 and ilosc[1][1]>1:
             sum_3x2x = 25
+    streak = 0
+    for i,x in enumerate(posortowana[:4]):
+        if posortowana[i+1]==x+1: 
+            streak += 1
+        elif posortowana[i+1]>x+1:
+            if i>=2:
+                break
+            else:
+                streak = 0
+
 
     if tura == 1:
         if table_data[6]["status"]=="gray":
@@ -157,11 +167,11 @@ def przelicz():
             table_data[11]["player1"]=sum_5x
         if table_data[12]["status"]=="gray":
             table_data[12]["player1"]=suma
-        if table_data[9]["status"]=="gray" and sum([1 for i,x in enumerate(posortowana[:4]) if posortowana[i+1]==x+1])>=3:
+        if table_data[9]["status"]=="gray" and streak>=3:
             table_data[9]["player1"]=30
         elif table_data[9]["status"]=="gray":
             table_data[9]["player1"]=0
-        if table_data[10]["status"]=="gray" and sum([1 for i,x in enumerate(posortowana[:4]) if posortowana[i+1]==x+1])==4:
+        if table_data[10]["status"]=="gray" and streak==4:
             table_data[10]["player1"]=40
         elif table_data[10]["status"]=="gray":
             table_data[10]["player1"]=0
@@ -176,11 +186,11 @@ def przelicz():
             table_data[11]["player2"]=sum_5x
         if table_data[12]["status2"]=="gray":
             table_data[12]["player2"]=suma
-        if table_data[9]["status2"]=="gray" and sum([1 for i,x in enumerate(posortowana[:4]) if posortowana[i+1]==x+1])>=3:
+        if table_data[9]["status2"]=="gray" and streak >=3:
             table_data[9]["player2"]=30
         elif table_data[9]["status2"]=="gray":
             table_data[9]["player2"]=0
-        if table_data[10]["status2"]=="gray" and sum([1 for i,x in enumerate(posortowana[:4]) if posortowana[i+1]==x+1])==4:
+        if table_data[10]["status2"]=="gray" and streak==4:
             table_data[10]["player2"]=40
         elif table_data[10]["status2"]=="gray":
             table_data[10]["player2"]=0
