@@ -6,6 +6,47 @@
 <div id="main" class="container-lg shadow p-3 mb-5">
     <h2 class="d-flex justify-content-center"> KOŚCI </h2>
     <p>Zautomatyzowana gra w kości z użyciem Rasspberry Pi 5<p>
+    
+
+    <button onclick="fetchResults()">Refresh Results</button>
+    <p id="result"></p>
+    <p id="error-message"></p>
 </div>
+
+<script type="text/javascript">
+        var lastHistory = '';
+          async function fetchResults() {
+            const resultParagraph = document.getElementById('result');
+            const errorMessage = document.getElementById('error-message');
+            
+            errorMessage.textContent = '';
+            if(lastHistory == ''){
+                resultParagraph.textContent = 'Fetching results...';
+            }
+            else {
+                resultParagraph.textContent = lastHistory;
+            }
+            
+
+            try {
+                // Fetch data from the Flask API
+                const response = await fetch('/api/result');
+                
+                // Check if the response is OK
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const myJSON = JSON.stringify(data);
+                lastHistory = myJSON;
+                resultParagraph.textContent = `${myJSON}`;
+
+            } catch (error) {
+                errorMessage.textContent = 'An error occurred. Please try again later.';
+            }
+            
+        }
+</script>
 
 {% endblock %}
