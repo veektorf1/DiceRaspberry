@@ -63,11 +63,11 @@ class DiceDetector:
       if self.validate_threshold==(n-1): # n is assigned before appending
         self.confirmed_result = result
   
-  def printResult(self,result: dict):
+  def getFinalResult(self,result: dict):
     labels=[]
     for key,value in result.items():
       [labels.append(key) for _ in range(len(value))]
-    print(f'Final result: {labels}')
+    return labels
     
 
   def detectAndDisplay(self,detection_threshold) -> dict:
@@ -118,8 +118,92 @@ class DiceDetector:
       result = { k:v for k,v in sorted(result.items(),key=lambda item:item[0]) }
       return result,frame
 
+def checkLen(result):
+    labels=[]
+    for key,value in result.items():
+      [labels.append(key) for _ in range(len(value))]
+    return len(labels)
 
 # detector = DiceDetector(picam)
+
+# try:
+#     while True:
+#         if not setDiodes:
+#             if num == 1:
+#                 GPIO.output(red_pin,1)
+#                 GPIO.output(yellow_pin,1)
+#                 GPIO.output(green_pin,1)
+#             elif num == 2:
+#                 GPIO.output(red_pin,1)
+#                 GPIO.output(yellow_pin,1)
+#                 GPIO.output(green_pin,0)
+#             elif num == 3:
+#                 GPIO.output(red_pin,1)
+#                 GPIO.output(yellow_pin,0)
+#                 GPIO.output(green_pin,0)
+#             elif num == 4:
+#                 GPIO.output(red_pin,0)
+#                 GPIO.output(yellow_pin,0)
+#                 GPIO.output(green_pin,0)
+#                 sleep(3)
+#                 num=1
+#                 GPIO.output(red_pin,1)
+#                 GPIO.output(yellow_pin,1)
+#                 GPIO.output(green_pin,1)
+#             setDiodes=True
+            
+            
+#         if start_motor and rolling_phase: #wejście do tego ifa powinno być sterowane przez
+#             # stronę - start_motor może po prostu być sprawdzany przez drugi proces i w reakcji może
+#             #dochodzić do zmiany rolling phase na przykład
+            
+
+#             print("detect")
+
+#             GPIO.output(motor_pin,1)
+#             sleep(3)
+#             GPIO.output(motor_pin,0)
+            
+            
+#             #sleep(1)
+#             for _ in range(7):
+#                 res,frame = detector.detectAndDisplay(accuracy_min)
+#                 detector.validateResult(res)
+#                 #cv2.imshow('frame', frame)
+#                 #cv2.waitKey(0)
+#                 if detector.confirmed_result is not None and checkLen(res) == 5:
+#                     break
+#             if detector.confirmed_result is not None and checkLen(res) == 5:
+#                 #print(f'Confirmed result is {res} ')
+#                 print(detector.getFinalResult(res))
+                
+#                 #TODO mamy już wyniki - jak je przesłać do drugiego procesu
+#                 #(condition variable??)
+                
+                
+#                 cv2.imshow('frame', frame) #TODO usunąć
+#                 #start_motor=False
+#                 detector.resetHistory()
+                
+#                 setDiodes = False
+#                 start_motor=False
+#                 num = (num)%4+1
+#             else:
+#                 print("Trzeba poprawić\n")
+#                 detector.resetHistory()
+#         elif start_motor:
+            
+#             start_motor=False
+
+# except KeyboardInterrupt:  
+#     print("Keyboard interrupt")
+# except Exception as e:
+#     print("Error")
+# finally:
+#     cv2.destroyAllWindows() #TODO -usunąć
+#     GPIO.cleanup()
+
+
 # while True:
     
 #   accuracy_min = 0.5
@@ -128,7 +212,7 @@ class DiceDetector:
 
 #   if detector.confirmed_result is not None:
 #     print(f'Confirmded result is {res} ')
-#     detector.printResult(res)
+#     print(detector.getFinalResult(res))
 
 #     sleep(5)
 #     detector.resetHistory()
