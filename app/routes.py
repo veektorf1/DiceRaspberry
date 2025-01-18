@@ -13,7 +13,7 @@ import cv2
 main = Blueprint('main',__name__)
 
 data='123'
-NUM_OF_DICES = 2
+NUM_OF_DICES = 5
 
 picam2 = Picamera2()
 picam2.configure(picam2.create_video_configuration(main={"format": 'XRGB8888',
@@ -59,11 +59,11 @@ def thread_camera2() -> list:
                 #sleep(1)
                 
                 res,frame = detector.detectAndDisplay(accuracy_min)
-                print("Result iteration ",res)
+                print("Result iteration ",res,len(detector.history))
                 detector.validateResult(res)
 
                 if detector.confirmed_result is not None:
-                    if checkLen(res) == NUM_OF_DICES: #for testing purposes i set it to 2
+                    if checkLen(res) == NUM_OF_DICES:
                         DicesResult = detector.getFinalResult(res)
                         print(DicesResult)
 
