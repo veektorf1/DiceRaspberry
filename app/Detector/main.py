@@ -26,38 +26,53 @@ class DiceDetector:
     """
     self.history = []
     self.confirmed_result = None
+  def printHistory(self):
+    print('-----------------')
+    print("HISTORY INFO:")
+    for key,value in self.history:
+      print(f'{key}: ,{len(value)}x')
+    print('-----------------')
+
 
   def validateResult(self,result) -> int:
     """
     Validates the result of the detection based on the number of repetitions of the same result.
-
+    If new detection is different from the previous one -> reset the history
     :param result: Dictionary containing the result of the detection
         Each key is a dice number and each value contains a class list [label]
     :return 
     """
     n = len(self.history)
-    print(self.history,result,n)
+    print("VALIDATION: HISTORY,RESULT,SHAPE")
+    print(result)
+    # self.printHistory()
+    print(self.history)
+    
 
-    if len(result.keys())==0: # Case when nothing is detected
+    if len(result.keys())==0 : # Case when nothing is detected
       self.resetHistory()
-      return None
+      return
 
     if n==0:
        self.history.append(result)
-    else:
-      last_result = self.history[n-1]
-      last_result_keys = last_result.keys()
-      result_keys = result.keys()
-      for key in result_keys:
-        if key in last_result_keys:
-          num_of_instances_result = len(result[key])
-          num_of_instances_last_result = len(last_result[key])
-          if num_of_instances_result != num_of_instances_last_result: # For every key in a dict, check the length of an array which is equal to number of detected scores
-            self.resetHistory()
-            return None
-        else:
+       return
+    
+    last_result = self.history[n-1]
+    last_result_keys = last_result.keys()
+    result_keys = result.keys()
+    if len(last_result_keys) != len(result_keys): # If the number of detected scores is different from the previous one
+      self.resetHistory()
+      return
+    for key in result_keys: # dictonaries are sorted by the key value!
+      if key in last_result_keys:
+        num_of_instances_result = len(result[key])
+        num_of_instances_last_result = len(last_result[key])
+        if num_of_instances_result != num_of_instances_last_result: # For every key in a dict, check the length of an array which is equal to number of detected scores
           self.resetHistory()
-          return None
+          return
+      else:
+        self.resetHistory()
+        return
 
       self.history.append(result)
       if self.validate_threshold==(n-1): # n is assigned before appending
@@ -66,7 +81,7 @@ class DiceDetector:
   def getFinalResult(self,result: dict):
     labels=[]
     for key,value in result.items():
-      [labels.append(key) for _ in range(len(value))]
+      [labels.append(int(key)) for _ in range(len(value))]
     return labels
     
 
@@ -96,26 +111,26 @@ class DiceDetector:
         if float(accuracy) < detection_threshold :
             continue
             
-      
         # draw the bounding box on the picture
         xmin, ymin, xmax, ymax = int(data[0]), int(data[1]), int(data[2]), int(data[3])
         print(f'Label: {label}, Accuracy: {accuracy}, Bounding Box: ({xmin}, {ymin}, {xmax}, {ymax})')
 
         if result.get(label) is None:
           result[label] = []
-          result[label].append([label,accuracy,(xmin, ymin, xmax, ymax)])
+          # result[label].append([label,accuracy,(xmin, ymin, xmax, ymax)])
+          result[label].append(label)
         else:
-          result[label].append([label,accuracy,(xmin, ymin, xmax, ymax)])
+          # result[label].append([label,accuracy,(xmin, ymin, xmax, ymax)])
+          result[label].append(label)
 
         frame = np.ascontiguousarray(frame) # Converts to C-contigous array
-        cv2.rectangle(frame, (xmin, ymin) , (xmax, ymax),(0,255,0),2)
+        # cv2.rectangle(frame, (xmin, ymin) , (xmax, ymax),(0,255,0),2)
         y = ymin - 15 if ymin - 15 > 15 else ymin + 15
-        cv2.putText(frame, "{} {:.1f}%".format(label,float(accuracy*100)), (xmin, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 2)
-
-
-      cv2.imshow('frame', frame)
-      cv2.waitKey(1)
+        # cv2.putText(frame, "{} {:.1f}%".format(label,float(accuracy*100)), (xmin, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 2)
+      # cv2.imshow('frame', frame)
+      # cv2.waitKey(1)
       result = { k:v for k,v in sorted(result.items(),key=lambda item:item[0]) }
+      # result is sorted by the key value 
       return result,frame
 
 def checkLen(result):

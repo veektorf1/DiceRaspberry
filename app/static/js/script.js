@@ -96,6 +96,25 @@ function startAutoRefresh(interval) {
     }, interval);
 }
 
+function updateData2(){
+    var button = document.getElementById("update-button");
+    button.disabled = true;
+    fetch('/update-data')
+        .then(response =>response.json())
+        .then(data => {
+            console.log(data);
+            if (data.success) {
+                loadData();
+                button.disabled = false;
+            }
+
+        })
+        .catch(error =>{
+            console.log(error);
+            button.disabled = false;
+        });
+}
+
 function updateData() {
     fetch('/update-data')
         .then(response => response.json())

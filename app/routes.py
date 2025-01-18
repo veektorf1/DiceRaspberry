@@ -13,6 +13,7 @@ import cv2
 main = Blueprint('main',__name__)
 
 data='123'
+NUM_OF_DICES = 2
 
 picam2 = Picamera2()
 picam2.configure(picam2.create_video_configuration(main={"format": 'XRGB8888',
@@ -30,13 +31,18 @@ start_motor = True
 #być dzielona przez wątki
 DicesResult = None
 
-def thread_camera2():
+def thread_camera2() -> list:
+    '''
+    Function seponsible for detecting dices and returns a result based on validation
+    :return: DicesResult - list of dices values integers
+    '''
     try:
+        global detector
         global start_motor
         global rolling_phase
         global DicesResult
 
-        while not stop_thread.is_set():
+        while True:#not stop_thread.is_set():
                 
             if start_motor and rolling_phase: #wejście do tego ifa powinno być sterowane przez
                 # stronę - start_motor może po prostu być sprawdzany przez drugi proces i w reakcji może
@@ -53,31 +59,25 @@ def thread_camera2():
                 #sleep(1)
                 
                 res,frame = detector.detectAndDisplay(accuracy_min)
+                print("Result iteration ",res)
                 detector.validateResult(res)
-                #cv2.imshow('frame', frame)
-                #cv2.waitKey(0
-                if detector.confirmed_result is not None and checkLen(res) == 2:
-                    #print(f'Confirmed result is {res} ')
-                    DicesResult = detector.getFinalResult(res)
-                    print(DicesResult)
-                    
-                    #TODO mamy już wyniki - jak je przesłać do drugiego procesu
-                    #(condition variable??)
-                    
-                    
-                    cv2.imshow('frame', frame) #TODO usunąć
-                    #start_motor=False
-                    detector.resetHistory()
-                    
-                    setDiodes = False
-                    start_motor=False
-                    # num = (num)%4+1
-                    # return final
-                else:
-                    print("Trzeba poprawić\n")
-                    # detector.resetHistory()
-            elif start_motor:
+
+                if detector.confirmed_result is not None:
+                    if checkLen(res) == NUM_OF_DICES: #for testing purposes i set it to 2
+                        DicesResult = detector.getFinalResult(res)
+                        print(DicesResult)
+
+                        #start_motor=False
+                        detector.resetHistory()
+                        
+                        setDiodes = False
+                        start_motor=False
+                        # num = (num)%4+1
+                        return DicesResult
+                    else: # confirmed result but not enough dices detected -> reset history
+                        detector.resetHistory() 
                 
+            elif start_motor:
                 start_motor=False
 
     except KeyboardInterrupt:  
@@ -85,7 +85,7 @@ def thread_camera2():
     except Exception as e:
         print(f'Error: {e}')
     finally:
-        cv2.destroyAllWindows() #TODO -usunąć
+        pass
         # GPIO.cleanup()
 
 
@@ -97,9 +97,9 @@ def signal_handler(sig, frame):
     exit(0)
 
 
-t1 = threading.Thread(target=thread_camera2)
-t1.start()
-signal.signal(signal.SIGINT, signal_handler)
+# t1 = threading.Thread(target=thread_camera2)
+# t1.start()
+# signal.signal(signal.SIGINT, signal_handler)
 
 table_data = [
     {"id": "1", "player2": "", "player1": "", "status": "gray", "status2": "gray"},
@@ -217,16 +217,21 @@ def rzut_koscmi():
     global table_kostki, table_selected,start_motor
     start_motor = True
 
-    while start_motor==False:
-        pass #czekamy na wynik
-    result = DicesResult
-
+    # while start_motor==False:
+    #     pass #czekamy na wynik
+    # result = DicesResult
+    result = thread_camera2()
+    result_shuffled = random.sample(result, len(result))
 
     print(f'Confirmed result is {result} ')
 
     for i in range(5):
         if table_selected[i] == 0:
-            table_kostki[i] = random.randint(1, 6)
+            
+            if i<NUM_OF_DICES:
+                table_kostki[i] = result_shuffled[i]
+            else:
+                table_kostki[i] = random.randint(1, 6)
 
 def przelicz():
     global table_kostki

@@ -7,10 +7,6 @@
     <h2 class="d-flex justify-content-center"> KOŚCI </h2>
     <p>Zautomatyzowana gra w kości z użyciem Rasspberry Pi 5<p>
     
-
-    <button onclick="fetchResults()">Refresh Results</button>
-    <p id="result"></p>
-    <p id="error-message"></p>
     
     <div class="container">
         <div class="table-container">
@@ -18,22 +14,22 @@
                 <tbody>
                     <tr>
                         <th>ID</th>
-                        <td data-status="1">1</td>
-                        <td data-status="0">2</td>
+                        <td data-status="1"></td>
+                        <td data-status="0"></td>
                     </tr>
                     <tr>
                         <th>Name</th>
-                        <td data-status="0">Alice</td>
-                        <td data-status="1">Bob</td>
+                        <td data-status="0"></td>
+                        <td data-status="1"></td>
                     </tr>
                     <tr>
                         <th>Age</th>
-                        <td data-status="1">25</td>
-                        <td data-status="0">30</td>
+                        <td data-status="1"></td>
+                        <td data-status="0"></td>
                     </tr>
                 </tbody>
             </table>
-            <button onclick="updateData()">Update Data</button>
+            <button id="update-button" onclick="updateData()">Update Data</button>
         </div>
         <div class="image-container">
             <img id="Kosc1" src="/static/images/kostka0.svg" alt="Obrazek 1" class="clickable-image">
@@ -45,40 +41,5 @@
     </div>
 </div>
 
-<script type="text/javascript">
-        var lastHistory = '';
-          async function fetchResults() {
-            const resultParagraph = document.getElementById('result');
-            const errorMessage = document.getElementById('error-message');
-            
-            errorMessage.textContent = '';
-            if(lastHistory == ''){
-                resultParagraph.textContent = 'Fetching results...';
-            }
-            else {
-                resultParagraph.textContent = lastHistory;
-            }
-            
-
-            try {
-                // Fetch data from the Flask API
-                const response = await fetch('/api/result');
-                
-                // Check if the response is OK
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-
-                const data = await response.json();
-                const myJSON = JSON.stringify(data);
-                lastHistory = myJSON;
-                resultParagraph.textContent = `${myJSON}`;
-
-            } catch (error) {
-                errorMessage.textContent = 'An error occurred. Please try again later.';
-            }
-            
-        }
-</script>
 
 {% endblock %}
