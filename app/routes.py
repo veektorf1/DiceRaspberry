@@ -10,96 +10,146 @@ import signal
 import threading
 import cv2
 
+import RPi.GPIO as GPIO
+from time import sleep
+
+motor_pin = 19
+button_pin = 26
+green_pin = 5
+yellow_pin = 6
+red_pin = 13
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(motor_pin,GPIO.OUT)
+GPIO.setup(button_pin,GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(green_pin,GPIO.OUT)
+GPIO.setup(yellow_pin,GPIO.OUT)
+GPIO.setup(red_pin,GPIO.OUT)
+
+
 main = Blueprint('main',__name__)
 
-data='123'
-NUM_OF_DICES = 2
+NUM_OF_DICES = 5
+
 
 picam2 = Picamera2()
-picam2.configure(picam2.create_video_configuration(main={"format": 'XRGB8888',
-                                                    "size": (640, 480)}))
+
+#picam2.configure(picam2.create_video_configuration(main={"format": 'XRGB8888',
+#                                                "size": (640, 480)}))
+
+camera_config = picam2.create_still_configuration(main={"size": (640, 480)}, lores={"size": (640, 480)}, display="lores")
+picam2.configure(camera_config)
+
+'''def closeCamera():
+    picam2.close()
+atexit.register(closeCamera)'''
+
 picam2.start()
 detector = DiceDetector(picam2=picam2)
 accuracy_min = 0.5
-stop_thread = threading.Event()
 
-rolling_phase = True
-#TODO - ^zmienna oznaczająca czy kliknięcie przycisku powinno coś robić
-#musi być dzielona przez oba wątki raczej
-start_motor = True
-#TODO - zmienna sygnalizująca kliknięcie przycisku - raczej też powinna
-#być dzielona przez wątki
+rolling_phase = False
+start_motor = True #TODO - zmienne mające sens przy operowaniu na wątkach
+#- teraz raczej mniej ale może do obsługi przerwania któraś by się przydała
+
 DicesResult = None
 
-def thread_camera2() -> list:
+try_count = 3
+
+def run_motor1(change):
+    global start_motor
+    start_motor = True
+
+GPIO.add_event_detect(button_pin, GPIO.FALLING, callback=run_motor1, bouncetime=1000)
+
+def GPIO_cleanup():
+    GPIO.output(red_pin,0)
+    GPIO.output(yellow_pin,0)
+    GPIO.output(green_pin,0)
+    GPIO.output(motor_pin,0)
+
+def lightDiodes():
+    global try_count
+    if try_count == 3:
+        GPIO.output(red_pin,1)
+        GPIO.output(yellow_pin,1)
+        GPIO.output(green_pin,1)
+    elif try_count == 2:
+        GPIO.output(red_pin,1)
+        GPIO.output(yellow_pin,1)
+        GPIO.output(green_pin,0)
+    elif try_count == 1:
+        GPIO.output(red_pin,1)
+        GPIO.output(yellow_pin,0)
+        GPIO.output(green_pin,0)
+    elif try_count == 0:
+        GPIO.output(red_pin,0)
+        GPIO.output(yellow_pin,0)
+        GPIO.output(green_pin,0)
+
+lightDiodes()
+
+def camera2() -> list:
     '''
     Function seponsible for detecting dices and returns a result based on validation
     :return: DicesResult - list of dices values integers
     '''
     try:
         global detector
-        global start_motor
-        global rolling_phase
+        #global start_motor
+        #global rolling_phase
         global DicesResult
-
+        reroll = True
+        
         while True:#not stop_thread.is_set():
                 
-            if start_motor and rolling_phase: #wejście do tego ifa powinno być sterowane przez
-                # stronę - start_motor może po prostu być sprawdzany przez drugi proces i w reakcji może
-                #dochodzić do zmiany rolling phase na przykład
-                
+                if reroll:
+                    reroll=False
 
-                print("detect")
 
-                # GPIO.output(motor_pin,1)
-                # sleep(3)
-                # GPIO.output(motor_pin,0)
-                
-                
-                #sleep(1)
-                
+                    print("detect")
+
+                    GPIO.output(motor_pin,1)
+                    sleep(3)
+                    GPIO.output(motor_pin,0)
+                                
                 res,frame = detector.detectAndDisplay(accuracy_min)
-                print("Result iteration ",res)
+                print("Result iteration ",res, len(detector.history) )
                 detector.validateResult(res)
 
                 if detector.confirmed_result is not None:
-                    if checkLen(res) == NUM_OF_DICES: #for testing purposes i set it to 2
+                    if checkLen(res) == NUM_OF_DICES: 
                         DicesResult = detector.getFinalResult(res)
                         print(DicesResult)
 
-                        #start_motor=False
                         detector.resetHistory()
                         
-                        setDiodes = False
-                        start_motor=False
-                        # num = (num)%4+1
                         return DicesResult
                     else: # confirmed result but not enough dices detected -> reset history
-                        detector.resetHistory() 
-                
-            elif start_motor:
-                start_motor=False
+                        detector.resetHistory()
+                        reroll=True
+
 
     except KeyboardInterrupt:  
         print("Keyboard interrupt")
+        GPIO_cleanup()
+        picam2.stop()
     except Exception as e:
         print(f'Error: {e}')
+        GPIO_cleanup()
+        picam2.stop()
     finally:
         pass
-        # GPIO.cleanup()
-
-
+        
+        
+        
 def signal_handler(sig, frame):
     print('Ctrl+C pressed!')
-    stop_thread.set()
-    t1.join()
+    GPIO_cleanup()
     picam2.stop()
     exit(0)
 
-
-# t1 = threading.Thread(target=thread_camera2)
-# t1.start()
-# signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGINT, signal_handler)
 
 table_data = [
     {"id": "1", "player2": "", "player1": "", "status": "gray", "status2": "gray"},
@@ -140,7 +190,7 @@ def get_kostki():
 
 
 def reset_game():
-    global table_data, table_kostki, table_selected, tura
+    global table_data, table_kostki, table_selected, tura, try_count
     table_data = [
         {"id": "1", "player2": "", "player1": "", "status": "gray", "status2": "gray"},
         {"id": "2", "player2": "", "player1": "", "status": "gray", "status2": "gray"},
@@ -160,6 +210,8 @@ def reset_game():
     table_kostki=[0,0,0,0,0]
     table_selected=[0,0,0,0,0]
     tura=1
+    try_count=3
+    lightDiodes()
 
 @main.route('/koniec-gry')
 def koniec_gry():
@@ -185,16 +237,21 @@ def choose_item():
     global table_data
     global table_selected
     global tura
+    global try_count
     cheating = 0
     item_id = int(request.args.get('item_id'))  # Pobieranie parametru z query string
     if tura == 1 and table_data[item_id]["status"] == "gray":
         table_data[item_id]["status"] = "black-bold"
         table_data[13]["player1"] = table_data[13]["player1"]+table_data[item_id]["player1"]
         tura=2
+        try_count = 3
+        lightDiodes()
     elif tura == 2 and table_data[item_id]["status2"] == "gray":
         table_data[item_id]["status2"] = "black-bold"
         table_data[13]["player2"] = table_data[13]["player2"]+table_data[item_id]["player2"]
         tura=1
+        try_count = 3
+        lightDiodes()
     else:
         cheating = 1
     if cheating==0:
@@ -209,18 +266,20 @@ def choose_item():
 
 @main.route('/update-data')
 def update_data():
-    rzut_koscmi()
-    przelicz()
+    global try_count
+    if(try_count > 0):
+        try_count -= 1
+        rzut_koscmi()
+        przelicz()
+        
     return jsonify(success=True)
 
-def rzut_koscmi():
-    global table_kostki, table_selected,start_motor
-    start_motor = True
 
-    # while start_motor==False:
-    #     pass #czekamy na wynik
-    # result = DicesResult
-    result = thread_camera2()
+def rzut_koscmi():
+    global table_kostki, table_selected
+    
+    lightDiodes()
+    result = camera2()
     result_shuffled = random.sample(result, len(result))
 
     print(f'Confirmed result is {result} ')

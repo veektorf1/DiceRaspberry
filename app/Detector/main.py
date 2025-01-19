@@ -6,10 +6,10 @@ from time import sleep
 from .config import model, init_camera
 
 accuracy_min = 0.4
-# picam = init_camera()
+#picam = init_camera()
 
 class DiceDetector:
-  def __init__(self,picam2,val_thr=4):
+  def __init__(self,picam2,val_thr=2):
     """
     Class for detecting dice results based on the number of repetitions of the same result.
 
@@ -74,10 +74,10 @@ class DiceDetector:
         self.resetHistory()
         return
 
-      self.history.append(result)
-      if self.validate_threshold==(n-1): # n is assigned before appending
-        self.confirmed_result = result
-  
+    self.history.append(result)
+    if self.validate_threshold==(n+1): # n is assigned before appending
+      self.confirmed_result = result
+
   def getFinalResult(self,result: dict):
     labels=[]
     for key,value in result.items():
