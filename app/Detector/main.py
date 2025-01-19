@@ -74,6 +74,7 @@ class DiceDetector:
         self.resetHistory()
         return
 
+
     self.history.append(result)
     if self.validate_threshold==(n+1): # n is assigned before appending
       self.confirmed_result = result

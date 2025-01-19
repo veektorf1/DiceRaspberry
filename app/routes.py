@@ -29,6 +29,7 @@ GPIO.setup(red_pin,GPIO.OUT)
 
 main = Blueprint('main',__name__)
 
+
 NUM_OF_DICES = 5
 
 
@@ -119,6 +120,7 @@ def camera2() -> list:
 
                 if detector.confirmed_result is not None:
                     if checkLen(res) == NUM_OF_DICES: 
+
                         DicesResult = detector.getFinalResult(res)
                         print(DicesResult)
 
