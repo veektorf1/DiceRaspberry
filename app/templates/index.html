@@ -7,39 +7,41 @@
     <h2 class="d-flex justify-content-center"> KOŚCI </h2>
     <p>Zautomatyzowana gra w kości z użyciem Rasspberry Pi 5<p>
     
-    
     <div class="container">
         <div class="table-container">
             <table id="data-table">
                 <tbody>
                     <tr>
                         <th>ID</th>
-                        <td data-status="1"></td>
-                        <td data-status="0"></td>
+                        <td data-status="1">1</td>
+                        <td data-status="0">2</td>
                     </tr>
                     <tr>
                         <th>Name</th>
-                        <td data-status="0"></td>
-                        <td data-status="1"></td>
+                        <td data-status="0">Alice</td>
+                        <td data-status="1">Bob</td>
                     </tr>
                     <tr>
                         <th>Age</th>
-                        <td data-status="1"></td>
-                        <td data-status="0"></td>
+                        <td data-status="1">25</td>
+                        <td data-status="0">30</td>
                     </tr>
                 </tbody>
             </table>
-            <button id="update-button" onclick="updateData()">Update Data</button>
         </div>
         <div class="image-container">
+            <div class="info-container">
+                <p id="nrTury">Tura: Gracz 1</p>
+                <p id="nrRzutu">Pozostałe rzuty: 3</p>
+            </div>
             <img id="Kosc1" src="/static/images/kostka0.svg" alt="Obrazek 1" class="clickable-image">
             <img id="Kosc2" src="/static/images/kostka0.svg" alt="Obrazek 2" class="clickable-image">
             <img id="Kosc3" src="/static/images/kostka0.svg" alt="Obrazek 3" class="clickable-image">
             <img id="Kosc4" src="/static/images/kostka0.svg" alt="Obrazek 4" class="clickable-image">
             <img id="Kosc5" src="/static/images/kostka0.svg" alt="Obrazek 5" class="clickable-image">
+            <button onclick="updateData()">Rzuć kośćmi</button>
         </div>
     </div>
 </div>
-
 
 {% endblock %}
