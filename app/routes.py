@@ -58,8 +58,9 @@ DicesResult = None
 try_count = 3
 
 def run_motor1(change):
-    global start_motor
-    start_motor = True
+    #global start_motor
+    #start_motor = True
+    updating()
 
 GPIO.add_event_detect(button_pin, GPIO.FALLING, callback=run_motor1, bouncetime=1000)
 
@@ -173,6 +174,9 @@ table_data = [
 table_kostki = [0, 0, 0, 0, 0]
 table_selected = [0, 0, 0, 0, 0]
 tura = 1
+zaktualizowano = False
+aktualizowanie = False
+brak_ruchow = False
 
 @main.route('/')
 def index():
@@ -192,7 +196,7 @@ def get_kostki():
 
 
 def reset_game():
-    global table_data, table_kostki, table_selected, tura, try_count
+    global table_data, table_kostki, table_selected, tura, try_count, brak_ruchow
     table_data = [
         {"id": "1", "player2": "", "player1": "", "status": "gray", "status2": "gray"},
         {"id": "2", "player2": "", "player1": "", "status": "gray", "status2": "gray"},
@@ -213,6 +217,7 @@ def reset_game():
     table_selected=[0,0,0,0,0]
     tura=1
     try_count=3
+    brak_ruchow = False
     lightDiodes()
 
 @main.route('/koniec-gry')
@@ -240,19 +245,22 @@ def choose_item():
     global table_selected
     global tura
     global try_count
+    global brak_ruchow
     cheating = 0
-    item_id = int(request.args.get('item_id'))  # Pobieranie parametru z query string
+    item_id = int(request.args.get('item_id'))
     if tura == 1 and table_data[item_id]["status"] == "gray":
         table_data[item_id]["status"] = "black-bold"
         table_data[13]["player1"] = table_data[13]["player1"]+table_data[item_id]["player1"]
         tura=2
         try_count = 3
+        brak_ruchow=False
         lightDiodes()
     elif tura == 2 and table_data[item_id]["status2"] == "gray":
         table_data[item_id]["status2"] = "black-bold"
         table_data[13]["player2"] = table_data[13]["player2"]+table_data[item_id]["player2"]
         tura=1
         try_count = 3
+        brak_ruchow=False
         lightDiodes()
     else:
         cheating = 1
@@ -266,15 +274,37 @@ def choose_item():
         return jsonify(success=True)
     return jsonify(success=False)
 
+def updating():
+    global zaktualizowano,aktualizowanie,try_count,brak_ruchow
+    if(aktualizowanie==False):
+        if(try_count > 0):
+            aktualizowanie=True
+            try_count -= 1
+            rzut_koscmi()
+            przelicz()
+            zaktualizowano=True
+        else:
+            brak_ruchow=True
+    
 @main.route('/update-data')
 def update_data():
-    global try_count
-    if(try_count > 0):
-        try_count -= 1
-        rzut_koscmi()
-        przelicz()
-        
+    updating()
     return jsonify(success=True)
+
+
+@main.route('/check-possible')
+def check_possible():
+    global zaktualizowano,aktualizowanie,brak_ruchow
+    if(zaktualizowano==True):
+        aktualizowanie=False
+        zaktualizowano=False
+        return jsonify({"wynik": 1})
+    elif(aktualizowanie==True):
+        return jsonify({"wynik": 2})
+    elif(brak_ruchow==True):
+        return jsonify({"wynik": 3})
+    else:
+        return jsonify({"wynik": 4})
 
 
 def rzut_koscmi():
@@ -312,7 +342,6 @@ def przelicz():
     sum_5x = 0
     sum_3x2x = 0
     posortowana=sorted(table_kostki)
-    print(posortowana)
     if ilosc[0][1]>2:
         sum_3x = suma
         if ilosc[0][1]>3:
