@@ -5,9 +5,7 @@ from app.Detector.main import DiceDetector,checkLen
 from app.Detector.config import model, init_camera
 from picamera2 import Picamera2
 import json
-import threading
 import signal
-import threading
 import cv2
 
 import RPi.GPIO as GPIO
