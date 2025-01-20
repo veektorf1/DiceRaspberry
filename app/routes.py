@@ -35,31 +35,21 @@ NUM_OF_DICES = 5
 
 picam2 = Picamera2()
 
-#picam2.configure(picam2.create_video_configuration(main={"format": 'XRGB8888',
-#                                                "size": (640, 480)}))
-
 camera_config = picam2.create_still_configuration(main={"size": (640, 480)}, lores={"size": (640, 480)}, display="lores")
 picam2.configure(camera_config)
-
-'''def closeCamera():
-    picam2.close()
-atexit.register(closeCamera)'''
 
 picam2.start()
 detector = DiceDetector(picam2=picam2)
 accuracy_min = 0.5
 
 rolling_phase = False
-start_motor = True #TODO - zmienne mające sens przy operowaniu na wątkach
-#- teraz raczej mniej ale może do obsługi przerwania któraś by się przydała
+start_motor = True 
 
 DicesResult = None
 
 try_count = 3
 
 def run_motor1(change):
-    #global start_motor
-    #start_motor = True
     updating()
 
 GPIO.add_event_detect(button_pin, GPIO.FALLING, callback=run_motor1, bouncetime=1000)
@@ -98,12 +88,10 @@ def camera2() -> list:
     '''
     try:
         global detector
-        #global start_motor
-        #global rolling_phase
         global DicesResult
         reroll = True
         
-        while True:#not stop_thread.is_set():
+        while True:
                 
                 if reroll:
                     reroll=False
@@ -116,7 +104,6 @@ def camera2() -> list:
                     GPIO.output(motor_pin,0)
                                 
                 res,frame = detector.detectAndDisplay(accuracy_min)
-                print("Result iteration ",res, len(detector.history) )
                 detector.validateResult(res)
 
                 if detector.confirmed_result is not None:
@@ -161,6 +148,7 @@ table_data = [
     {"id": "4", "player2": "", "player1": "", "status": "gray", "status2": "gray"},
     {"id": "5", "player2": "", "player1": "", "status": "gray", "status2": "gray"},
     {"id": "6", "player2": "", "player1": "", "status": "gray", "status2": "gray"},
+    {"id": "bonus", "player2": "0", "player1": "0", "status": "black-bold", "status2": "black-bold"},
     {"id": "3x", "player2": "", "player1": "", "status": "gray", "status2": "gray"},
     {"id": "4x", "player2": "", "player1": "", "status": "gray", "status2": "gray"},
     {"id": "3+2x", "player2": "", "player1": "", "status": "gray", "status2": "gray"},
@@ -204,6 +192,7 @@ def reset_game():
         {"id": "4", "player2": "", "player1": "", "status": "gray", "status2": "gray"},
         {"id": "5", "player2": "", "player1": "", "status": "gray", "status2": "gray"},
         {"id": "6", "player2": "", "player1": "", "status": "gray", "status2": "gray"},
+        {"id": "bonus", "player2": "0", "player1": "0", "status": "black-bold", "status2": "black-bold"},
         {"id": "3x", "player2": "", "player1": "", "status": "gray", "status2": "gray"},
         {"id": "4x", "player2": "", "player1": "", "status": "gray", "status2": "gray"},
         {"id": "3+2x", "player2": "", "player1": "", "status": "gray", "status2": "gray"},
@@ -223,9 +212,9 @@ def reset_game():
 @main.route('/koniec-gry')
 def koniec_gry():
     global table_data, table_kostki, table_selected, tura
-    if table_data[13]["player1"] > table_data[13]["player2"]:
+    if table_data[14]["player1"] > table_data[14]["player2"]:
         wynik = 1
-    elif table_data[13]["player1"] < table_data[13]["player2"]:
+    elif table_data[14]["player1"] < table_data[14]["player2"]:
         wynik = 2
     else:
         wynik = 0
@@ -247,17 +236,35 @@ def choose_item():
     global try_count
     global brak_ruchow
     cheating = 0
+    suma_bonus=0
     item_id = int(request.args.get('item_id'))
     if tura == 1 and table_data[item_id]["status"] == "gray":
         table_data[item_id]["status"] = "black-bold"
-        table_data[13]["player1"] = table_data[13]["player1"]+table_data[item_id]["player1"]
+        for i in range(6):
+            if table_data[i]["status"]=="black-bold":
+                suma_bonus += table_data[i]["player1"]
+        if suma_bonus >= 63 and table_data[6]["player1"]!= 50:
+            table_data[6]["player1"]= 50
+            table_data[14]["player1"] = table_data[14]["player1"]+table_data[6]["player1"]
+
+            
+        table_data[14]["player1"] = table_data[14]["player1"]+table_data[item_id]["player1"]
+        
         tura=2
         try_count = 3
         brak_ruchow=False
         lightDiodes()
     elif tura == 2 and table_data[item_id]["status2"] == "gray":
         table_data[item_id]["status2"] = "black-bold"
-        table_data[13]["player2"] = table_data[13]["player2"]+table_data[item_id]["player2"]
+        for i in range(6):
+            if table_data[i]["status2"]=="black-bold":
+                suma_bonus += table_data[i]["player2"]
+        if suma_bonus >= 63 and table_data[6]["player2"]!= 50:
+                table_data[6]["player2"]= 50
+                table_data[14]["player2"] = table_data[14]["player2"]+table_data[6]["player2"]
+
+        table_data[14]["player2"] = table_data[14]["player2"]+table_data[item_id]["player2"]
+        
         tura=1
         try_count = 3
         brak_ruchow=False
@@ -266,7 +273,7 @@ def choose_item():
         cheating = 1
     if cheating==0:
         table_selected=[0,0,0,0,0]
-        for i in range(13):
+        for i in range(14):
             if table_data[i]["status2"]=="gray":
                 table_data[i]["player2"]=""
             if table_data[i]["status"]=="gray":
@@ -328,13 +335,21 @@ def przelicz():
     global table_kostki
     global table_data
     global tura
+    bonus = 0
     for i in range(6):
         if tura == 1:
             if table_data[i]["status"]=="gray":
                 table_data[i]["player1"]=sum([x for x in table_kostki if x == i+1])
+            else:
+                bonus += 1
         else:
             if table_data[i]["status2"]=="gray":
                 table_data[i]["player2"]=sum([x for x in table_kostki if x == i+1])
+            else:
+                bonus +=1
+    suma_bonus = 0
+    
+           
     suma=sum(table_kostki)
     ilosc = Counter(table_kostki).most_common()
     sum_3x = 0
@@ -361,42 +376,42 @@ def przelicz():
                 streak = 0
 
 
-    if tura == 1:
-        if table_data[6]["status"]=="gray":
-            table_data[6]["player1"]=sum_3x
+    if tura == 1:            
         if table_data[7]["status"]=="gray":
-            table_data[7]["player1"]=sum_4x
+            table_data[7]["player1"]=sum_3x
         if table_data[8]["status"]=="gray":
-            table_data[8]["player1"]=sum_3x2x
-        if table_data[11]["status"]=="gray":
-            table_data[11]["player1"]=sum_5x
+            table_data[8]["player1"]=sum_4x
+        if table_data[9]["status"]=="gray":
+            table_data[9]["player1"]=sum_3x2x
         if table_data[12]["status"]=="gray":
-            table_data[12]["player1"]=suma
-        if table_data[9]["status"]=="gray" and streak>=3:
-            table_data[9]["player1"]=30
-        elif table_data[9]["status"]=="gray":
-            table_data[9]["player1"]=0
-        if table_data[10]["status"]=="gray" and streak==4:
-            table_data[10]["player1"]=40
+            table_data[12]["player1"]=sum_5x
+        if table_data[13]["status"]=="gray":
+            table_data[13]["player1"]=suma
+        if table_data[10]["status"]=="gray" and streak>=3:
+            table_data[10]["player1"]=30
         elif table_data[10]["status"]=="gray":
             table_data[10]["player1"]=0
+        if table_data[11]["status"]=="gray" and streak==4:
+            table_data[11]["player1"]=40
+        elif table_data[11]["status"]=="gray":
+            table_data[11]["player1"]=0
     else:
-        if table_data[6]["status2"]=="gray":
-            table_data[6]["player2"]=sum_3x
         if table_data[7]["status2"]=="gray":
-            table_data[7]["player2"]=sum_4x
+            table_data[7]["player2"]=sum_3x
         if table_data[8]["status2"]=="gray":
-            table_data[8]["player2"]=sum_3x2x
-        if table_data[11]["status2"]=="gray":
-            table_data[11]["player2"]=sum_5x
+            table_data[8]["player2"]=sum_4x
+        if table_data[9]["status2"]=="gray":
+            table_data[9]["player2"]=sum_3x2x
         if table_data[12]["status2"]=="gray":
-            table_data[12]["player2"]=suma
-        if table_data[9]["status2"]=="gray" and streak >=3:
-            table_data[9]["player2"]=30
-        elif table_data[9]["status2"]=="gray":
-            table_data[9]["player2"]=0
-        if table_data[10]["status2"]=="gray" and streak==4:
-            table_data[10]["player2"]=40
+            table_data[12]["player2"]=sum_5x
+        if table_data[13]["status2"]=="gray":
+            table_data[13]["player2"]=suma
+        if table_data[10]["status2"]=="gray" and streak >=3:
+            table_data[10]["player2"]=30
         elif table_data[10]["status2"]=="gray":
             table_data[10]["player2"]=0
+        if table_data[11]["status2"]=="gray" and streak==4:
+            table_data[11]["player2"]=40
+        elif table_data[11]["status2"]=="gray":
+            table_data[11]["player2"]=0
  

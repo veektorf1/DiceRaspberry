@@ -165,6 +165,10 @@ function updateData() {
 }
 
 window.onload = function() {
+    if (window.innerWidth <= 600) { 
+    document.getElementById('gracz1').textContent = 'G1'; 
+    document.getElementById('gracz2').textContent = 'G2'; }
+
     loadData();
     ready = 0;
     startAutoRefresh(200);

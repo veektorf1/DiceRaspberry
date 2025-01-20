@@ -11,8 +11,7 @@ class DiceDetector:
   def __init__(self,picam2,val_thr=2):
     """
     Class for detecting dice results based on the number of repetitions of the same result.
-
-    :param threshold: Number of repetitions of the same result to validate the result.
+    :param threshold: Number of repetitions of the same result to confirm it.
     """
     self.validate_threshold = val_thr  
     self.history = []
@@ -110,10 +109,8 @@ class DiceDetector:
 
         if result.get(label) is None:
           result[label] = []
-          # result[label].append([label,accuracy,(xmin, ymin, xmax, ymax)])
           result[label].append(label)
         else:
-          # result[label].append([label,accuracy,(xmin, ymin, xmax, ymax)])
           result[label].append(label)
         y = ymin - 15 if ymin - 15 > 15 else ymin + 15
 
