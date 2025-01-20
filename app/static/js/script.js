@@ -86,9 +86,9 @@ function addCellListeners() {
                             });
                             deleteMessage();
                             rzuty = 3;
+                            runda = runda + 1;
                             loadData();
                             ready = 0;
-                            runda = runda + 1;
                             if (runda > 26) {
                                 koniecgry();
                             }
