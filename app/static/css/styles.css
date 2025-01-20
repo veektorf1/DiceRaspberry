@@ -3,6 +3,12 @@ body {
     font-family: Arial, sans-serif;
     color: white;
 }
+#title{
+    letter-spacing: 2px;
+    font-size: 30px;
+    font-weight: bold;
+    margin-top: 5%;
+}
 .container {
     width: 100%;
     height: 80%;

@@ -6,7 +6,6 @@ from time import sleep
 from .config import model, init_camera
 
 accuracy_min = 0.4
-#picam = init_camera()
 
 class DiceDetector:
   def __init__(self,picam2,val_thr=2):
@@ -26,12 +25,6 @@ class DiceDetector:
     """
     self.history = []
     self.confirmed_result = None
-  def printHistory(self):
-    print('-----------------')
-    print("HISTORY INFO:")
-    for key,value in self.history:
-      print(f'{key}: ,{len(value)}x')
-    print('-----------------')
 
 
   def validateResult(self,result) -> int:
@@ -45,7 +38,6 @@ class DiceDetector:
     n = len(self.history)
     print("VALIDATION: HISTORY,RESULT,SHAPE")
     print(result)
-    # self.printHistory()
     print(self.history)
     
 
@@ -63,7 +55,7 @@ class DiceDetector:
     if len(last_result_keys) != len(result_keys): # If the number of detected scores is different from the previous one
       self.resetHistory()
       return
-    for key in result_keys: # dictonaries are sorted by the key value!
+    for key in result_keys: # Dictonaries area already sorted by the key value!
       if key in last_result_keys:
         num_of_instances_result = len(result[key])
         num_of_instances_last_result = len(last_result[key])
@@ -123,15 +115,11 @@ class DiceDetector:
         else:
           # result[label].append([label,accuracy,(xmin, ymin, xmax, ymax)])
           result[label].append(label)
-
-        frame = np.ascontiguousarray(frame) # Converts to C-contigous array
-        # cv2.rectangle(frame, (xmin, ymin) , (xmax, ymax),(0,255,0),2)
         y = ymin - 15 if ymin - 15 > 15 else ymin + 15
-        # cv2.putText(frame, "{} {:.1f}%".format(label,float(accuracy*100)), (xmin, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 2)
-      # cv2.imshow('frame', frame)
-      # cv2.waitKey(1)
+
       result = { k:v for k,v in sorted(result.items(),key=lambda item:item[0]) }
-      # result is sorted by the key value 
+      # result is sorted by the key (dice number)
+      
       return result,frame
 
 def checkLen(result):
@@ -139,98 +127,3 @@ def checkLen(result):
     for key,value in result.items():
       [labels.append(key) for _ in range(len(value))]
     return len(labels)
-
-# detector = DiceDetector(picam)
-
-# try:
-#     while True:
-#         if not setDiodes:
-#             if num == 1:
-#                 GPIO.output(red_pin,1)
-#                 GPIO.output(yellow_pin,1)
-#                 GPIO.output(green_pin,1)
-#             elif num == 2:
-#                 GPIO.output(red_pin,1)
-#                 GPIO.output(yellow_pin,1)
-#                 GPIO.output(green_pin,0)
-#             elif num == 3:
-#                 GPIO.output(red_pin,1)
-#                 GPIO.output(yellow_pin,0)
-#                 GPIO.output(green_pin,0)
-#             elif num == 4:
-#                 GPIO.output(red_pin,0)
-#                 GPIO.output(yellow_pin,0)
-#                 GPIO.output(green_pin,0)
-#                 sleep(3)
-#                 num=1
-#                 GPIO.output(red_pin,1)
-#                 GPIO.output(yellow_pin,1)
-#                 GPIO.output(green_pin,1)
-#             setDiodes=True
-            
-            
-#         if start_motor and rolling_phase: #wejście do tego ifa powinno być sterowane przez
-#             # stronę - start_motor może po prostu być sprawdzany przez drugi proces i w reakcji może
-#             #dochodzić do zmiany rolling phase na przykład
-            
-
-#             print("detect")
-
-#             GPIO.output(motor_pin,1)
-#             sleep(3)
-#             GPIO.output(motor_pin,0)
-            
-            
-#             #sleep(1)
-#             for _ in range(7):
-#                 res,frame = detector.detectAndDisplay(accuracy_min)
-#                 detector.validateResult(res)
-#                 #cv2.imshow('frame', frame)
-#                 #cv2.waitKey(0)
-#                 if detector.confirmed_result is not None and checkLen(res) == 5:
-#                     break
-#             if detector.confirmed_result is not None and checkLen(res) == 5:
-#                 #print(f'Confirmed result is {res} ')
-#                 print(detector.getFinalResult(res))
-                
-#                 #TODO mamy już wyniki - jak je przesłać do drugiego procesu
-#                 #(condition variable??)
-                
-                
-#                 cv2.imshow('frame', frame) #TODO usunąć
-#                 #start_motor=False
-#                 detector.resetHistory()
-                
-#                 setDiodes = False
-#                 start_motor=False
-#                 num = (num)%4+1
-#             else:
-#                 print("Trzeba poprawić\n")
-#                 detector.resetHistory()
-#         elif start_motor:
-            
-#             start_motor=False
-
-# except KeyboardInterrupt:  
-#     print("Keyboard interrupt")
-# except Exception as e:
-#     print("Error")
-# finally:
-#     cv2.destroyAllWindows() #TODO -usunąć
-#     GPIO.cleanup()
-
-
-# while True:
-    
-#   accuracy_min = 0.5
-#   res,frame = detector.detectAndDisplay(accuracy_min)
-#   detector.validateResult(res)
-
-#   if detector.confirmed_result is not None:
-#     print(f'Confirmded result is {res} ')
-#     print(detector.getFinalResult(res))
-
-#     sleep(5)
-#     detector.resetHistory()
-
-# self.picam2.stop()
