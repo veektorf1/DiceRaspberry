@@ -1,4 +1,4 @@
-**[EN English Version Below](#english-version)**
+**[🇬🇧 EN Version Below](#english-version)**
 
 🇵🇱 PL
 # 🎲 System wbudowany do gry w kości wspomagany sztuczną inteligencją
