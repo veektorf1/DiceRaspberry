@@ -1,5 +1,11 @@
 **[🇬🇧 EN Version Below](#english-version)**
 
+<img src="/Images/IMAGE.jpg" height="250" />
+<img src="/Images/IMAGE1.jpg" height="250" />
+<img src="/Images/IMAGE3.jpg" height="250" />
+<img src="/Images/webpage.png" height="500" />
+
+
 🇵🇱 PL
 # 🎲 System wbudowany do gry w kości wspomagany sztuczną inteligencją
 ## 1. Opis projektu
@@ -7,6 +13,10 @@ Projekt grupowy, którego celem było stworzenie urządzenia do klasycznej wersj
 
 Zasady gry są oparte na klascznej [GRZE W KOŚCI](https://en.wikipedia.org/wiki/Yahtzee). W zaimplementowanej wersji gra trwa przez 13 kolejek, w których każdy z graczy może wykonać do 3 rzutów kośćmi. Na początku rzuca się pięcioma kośćmi i po każdym rzucie gracz ma prawo wybrać jakie kości z wyrzuconymi wartościami chce zostawić, a którymi zamierza dalej rzucać. Użytkownik w każdej kolejce wybiera do jakiej kategorii chce wpisać swój wynik (np. mały strit, generał, itd…). Jeśli jego kości układają się w kombinację premiowaną przez wybraną kategorię to dostaje odpowiednią liczbę punktów, w przeciwnym razie dostaje zero. Wynik końcowy to suma punktów ze wszystkich kategorii. Wygrywa gracz, którego wynik końcowy jest najwyższy.
 
+
+<img src="/Images/IMAGE.jpg" height="250" />
+<img src="/Images/IMAGE1.jpg" height="250" />
+<img src="/Images/IMAGE3.jpg" height="250" />
 
 
 ## 2. Wykorzystany sprzęt i technologie:
